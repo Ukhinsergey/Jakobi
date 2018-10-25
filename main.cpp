@@ -7,7 +7,51 @@
 
 using namespace std;
 const int w = 8;
-const double eps = FLT_EPSILON/10000000;
+const double eps = FLT_EPSILON/10;
+
+
+
+template <typename T> 
+int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
+
+
+void mulmatr(int n, double **a,double **t, double cosf, double sinf, int i, int j){
+	double tempstri[n], tempstrj[n], tempclni[n], tempclnj[n];
+	for (int k = 0 ; k < n; ++k) {
+		tempstri[k] = cosf * a[i][k] - sinf * a[j][k];
+		tempstrj[k] = sinf * a[i][k] + a[j][k] * cosf;
+		//cout << "i" << k << ' ' << tempstri[k] << endl;
+		//cout << "j" << k << ' ' << tempstrj[k] << endl;
+		//использовать tempstri;
+	}
+	cout << endl << endl;
+	for (int k = 0 ; k < n; ++k) {
+		tempclni[k] = a[k][i] * cosf - sinf * a[k][j];
+		tempclnj[k] = a[k][i] * sinf + cosf * a[k][j];
+		//cout << "i" << k << ' ' << tempstri[k] << endl;
+		//cout << "j" << k << ' ' << tempstrj[k] << endl;
+	}
+	tempclni[i] = tempstri[i] * cosf - sinf * tempstri[j];
+	tempclni[j] = tempstri[i] * sinf + cosf * tempstri[j];
+	tempclnj[i] = tempstrj[i] * cosf - sinf * tempstrj[j];
+	tempclnj[j] = tempstrj[i] * sinf + cosf * tempstrj[j];
+	//cout << tempclni[i] << ' ' << tempclni[j] <<' ' << tempclnj[i] << ' ' << tempclnj[j] << " " << tempclnj[1] <<endl;
+	tempstri[i] = tempclni[i];
+	tempstri[j] = tempclnj[i];
+	tempstrj[i] = tempclni[j];
+	tempstrj[j] = tempclnj[j];
+
+	for(int k = 0 ; k < n; ++k) {
+		a[i][k] = tempstri[k];
+		a[j][k] = tempstrj[k];
+		a[k][i] = tempclni[k];
+		a[k][j] = tempclnj[k];
+	}
+	
+}
 
 
 
@@ -21,7 +65,7 @@ void freemem(double **&a, int n){
 
 
 
-void printmatr(double **a, int n) {
+void printmatr(int n, double **a) {
 	int i,j;
 	for (i = 0; i < n; i++) {
 		for (j = 0; j < n; j++) {
@@ -35,7 +79,7 @@ void printmatr(double **a, int n) {
 
 
 double func(int i,int j, int n) {
-	return 	2 * i + j;
+	return 	(2 * i + 2 * j) * (i != j) + 3 * (i == j);
 }
 
 
@@ -61,6 +105,20 @@ void selection(int mode, int &i1, int &j1, double ** a, int n) {
 		case 2:
 			break;
 		case 3:
+			if ( j1 == n - 1) {
+				if (i1 == n - 1) {
+					i1 = 0;
+					j1 = 1;
+					return;
+				} else {
+					++i1;
+					j1 = i1 + 1;
+					return ;
+				}
+			} else {
+				++j1;
+				return;
+			}
 			break;
 		default:
 			cout << "error mode";
@@ -78,11 +136,40 @@ void answer(int n, double **a, double **t, int mode) {
 			end += abs(a[i][j]) * (i != j);
 		}
 	}	
+	double sumstr[n];
+	for(int i = 0 ; i < n; ++i) {
+		sumstr[i] = 0;
+		for (int j = 0 ; j < n ; ++j) {
+			sumstr[i] += a[i][j] * (i != j);
+		}
+	}
 
 	while ( end > eps) {
-		int i, j;
+		int i = 0;
+		int j = 0;
 		selection(mode, i, j, a, n);
-		cout << i << ' ' << j << endl;
+		double x = - 2 * a[i][j];
+		double y = a[i][i] - a[j][j];
+		double cosf, sinf;
+		if ( y == 0 ) {
+			cosf = 1.0 / sqrt(2);
+			sinf = cosf;
+		} else {
+			cosf = sqrt(1.0/2 + abs(y)/(2 * sqrt(x * x + y * y)));
+			sinf = sgn( x * y) * abs(x) / (2 * cosf * sqrt(x*x + y * y));
+		}
+		//cout << "cos sin" << cosf << ' ' << sinf << endl;
+		mulmatr(n, a, t, cosf, sinf,i, j);
+		/*if (abs(a[i][j]) < eps) {
+			cout << "a :" << endl;
+			printmatr(n,a);
+			cout << "t :" << endl;
+			printmatr(n,t);
+			return ;
+		}*/
+		cin >> x;
+		printmatr(n,a);
+		//cout << i << ' ' << j << endl;
 	}
 	
 }
@@ -130,7 +217,7 @@ int main(){
 				a[i][j] = func(i,j,n);
 			}
 		}
-		printmatr(a,n);
+		printmatr(n,a);
 	}
 	double **t = new double *[n];
 	for (int i = 0; i < n; ++i) {
@@ -141,7 +228,7 @@ int main(){
 			t[i][j] = (i == j);
 		}
 	}
-	printmatr(t, n);
+	printmatr(n,t);
 	answer(n, a, t, mode);
 	freemem(a,n);
 	freemem(t,n);
