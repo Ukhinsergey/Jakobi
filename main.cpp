@@ -6,7 +6,7 @@
 
 
 using namespace std;
-const int w = 8;
+const int w = 12;
 const double eps = FLT_EPSILON;
 
 
@@ -23,20 +23,15 @@ void mulmatr(int n, double **a,double **t, double cosf, double sinf, int i, int 
 	for (int k = 0 ; k < n; ++k) {
 		tempstri[k] = cosf * a[i][k] - sinf * a[j][k];
 		tempstrj[k] = sinf * a[i][k] + a[j][k] * cosf;
-		//cout << "i" << k << ' ' << tempstri[k] << endl;
-		//cout << "j" << k << ' ' << tempstrj[k] << endl;
 	}
 	for (int k = 0 ; k < n; ++k) {
 		tempclni[k] = a[k][i] * cosf - sinf * a[k][j];
 		tempclnj[k] = a[k][i] * sinf + cosf * a[k][j];
-		//cout << "i" << k << ' ' << tempstri[k] << endl;
-		//cout << "j" << k << ' ' << tempstrj[k] << endl;
 	}
 	tempclni[i] = tempstri[i] * cosf - sinf * tempstri[j];
 	tempclni[j] = tempstri[i] * sinf + cosf * tempstri[j];
 	tempclnj[i] = tempstrj[i] * cosf - sinf * tempstrj[j];
 	tempclnj[j] = tempstrj[i] * sinf + cosf * tempstrj[j];
-	//cout << tempclni[i] << ' ' << tempclni[j] <<' ' << tempclnj[i] << ' ' << tempclnj[j] << " " << tempclnj[1] <<endl;
 	tempstri[i] = tempclni[i];
 	tempstri[j] = tempclnj[i];
 	tempstrj[i] = tempclni[j];
@@ -59,7 +54,7 @@ void mulmatr(int n, double **a,double **t, double cosf, double sinf, int i, int 
 		}
 
 	}
-
+	
 	//считаем end
 	for(int k = 0 ; k < n; ++k) {
 		end -= abs(a[i][k]) * ( i != k);
@@ -79,6 +74,16 @@ void mulmatr(int n, double **a,double **t, double cosf, double sinf, int i, int 
 		a[k][i] = tempclni[k];
 		a[k][j] = tempclnj[k];
 	}
+
+	//матрица т
+	for (int k = 0 ; k < n; ++k) {
+		tempclni[k] = t[k][i] * cosf - sinf * t[k][j];
+		tempclnj[k] = t[k][i] * sinf + cosf * t[k][j];
+	}
+	for (int k = 0 ; k < n; ++k) {
+		t[k][i] = tempclni[k];
+		t[k][j] = tempclnj[k];
+	}
 }
 
 
@@ -94,14 +99,26 @@ void freemem(double **&a, int n){
 
 
 void printmatr(int n, double **a) {
-	int i,j;
-	for (i = 0; i < n; i++) {
-		for (j = 0; j < n; j++) {
-			cout << setw(w) << a[i][j] << ' ';
+	if (n <= 10) {
+		int i,j;
+		for (i = 0; i < n; i++) {
+			for (j = 0; j < n; j++) {
+				cout << setw(w) << a[i][j] << ' ';
+			}
+			cout << endl;
 		}
 		cout << endl;
+	} else {
+		ofstream fout("output.txt"); 
+		for (int i = 0 ; i < n ; ++i) {
+			for (int j = 0 ; j < n; ++j) {
+				fout << setw(w) << a[i][j] << ' ';
+			}
+			fout << endl;
+		}
+		fout << endl;
 	}
-	cout << endl;
+	
 }
 
 
@@ -252,7 +269,7 @@ int main(){
 				fin >> a[i][j];
 			}
 		}
-		//printmatr(a,n);
+		//printmatr(n,a);
 	} else {
 		cout << "size = ";
 		cin >> n;
@@ -283,6 +300,7 @@ int main(){
 	answer(n, a, t, mode);
 	time = - clock();
 	cout << endl << setprecision(6) << 1000*((double) -time)/CLOCKS_PER_SEC << "ms" <<endl;
+	printmatr(n,t);
 	freemem(a,n);
 	freemem(t,n);
 	return 0;
